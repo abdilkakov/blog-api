@@ -1,0 +1,32 @@
+{% extends "admin/base.html %}
+{% load i18n unfold %}
+
+{% block content %}
+    {% component "nofold/components/container.html%}
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">
+            {% for metric in stats %}
+                {% component "unfold/components/card.html" with title=metric.label %}
+                    {% component "unfold/components/title.html %}
+                        {{ metric.value }}
+                    {% endcomponent %}
+                {% endcomponent %}
+            {%endfor
+        </div>
+        <div class = "grid grid cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {% component "unfold/components/card.html" with title="Posts by category" %}
+                {% component "unfold/components/chart/bar.html" with data=categories_chart height=300%}
+                {% endcomponent %}
+            {% endcomponent %}
+            {% component "unfold/components/card.html with title="Top 5 authors" %}
+                {% component "unfold/components/table.html" with table=top_authors card_included=1 striped=1%}
+                {% endcomponents %}
+            {% endcomponents %}
+        </div>
+        {% component "unfold/components/card.html" with title="Post status distribution%}
+            {% component "unfold/components/progress.html" with title="Published" value=published_percentage %}
+            {% endcomponent %}
+            {% component "unfold/components/progress.html with title="Drafts" value=draft_percentage %}
+            {% endcomponent%}
+        {% endcomponent %}
+    {% endcomponent %}
+{% endblock %}
