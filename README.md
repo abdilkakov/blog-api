@@ -87,3 +87,32 @@ The admin panel includes:
 python -m ruff check .
 python manage.py check
 ```
+
+## Queries — Django ORM Homework 3
+
+The `queries` command demonstrates 50 Django ORM operations on the
+seeded blog database. Each entry shows the function name, SQL query
+count, and a preview of up to five result rows.
+
+```bash
+python manage.py migrate
+python manage.py seed --clear
+python manage.py queries
+python manage.py queries --number 31
+python manage.py queries --number 6 --sql
+```
+
+Example output (counts depend on seeded data):
+
+```text
+#31 categories_with_post_count — 1 SQL query
+  Category(pk=1) name='Python' post_count=16
+  Category(pk=2) name='Django' post_count=13
+  (8 rows)
+```
+
+Running without `--number` skips queries 40–44 because these change
+records. Run them explicitly, e.g. `python manage.py queries --number 41`.
+Use `python manage.py seed --clear` to reset local demo data. The seed
+spreads post dates across the last 365 days, updates about 30% of posts,
+and creates comments no earlier than their parent posts.
