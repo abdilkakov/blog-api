@@ -10,7 +10,8 @@ from django.utils.text import slugify
 
 from apps.auths.models import User
 from apps.blog.models import Category, Comment, Post, Tag
-
+from datetime import timedelta
+from django.utils import timezone
 
 DEFAULT_USERS = 20
 DEFAULT_POSTS = 100
@@ -29,6 +30,12 @@ MIN_COMMENT_SENTENCES = 1
 MAX_COMMENT_SENTENCES = 3
 EMAIL_DOMAIN = "example.com"
 SLUG_SUFFIX_START = 2
+SEED_DAYS = 365
+EDITED_POST_RATIO = 0.30
+MIN_EDIT_DAYS = 1
+MAX_EDIT_DAYS = 30
+SECONDS_PER_DAY = 24 * 60 * 60
+
 
 CATEGORY_NAMES = (
     "Python", "Django", "DevOps", "Databases",
@@ -183,6 +190,23 @@ class Command(BaseCommand):
             ))
 
         Post.objects.bulk_create(posts)
+        now = timezone.now()
+
+        for post in posts:
+            age_seconds = random.randint(0, SEED_DAYS * SECONDS_PER_DAY)
+            post.created_at = now - timedelta(seconds=age_seconds)
+            post.updated_at = post.created_at
+
+            if random.random() < EDITED_POST_RATIO:
+                available_days = min(
+                    MAX_EDIT_DAYS,
+                    (now - post.created_at).days,
+                )
+                if available_days >= MIN_EDIT_DAYS:
+                    post.updated_at = post.created_at + timedelta(
+                        days = random.randint(MIN_EDIT_DAYS, available_days)
+                    )
+        Post.objects.bulk_update(posts, ["created_at", "updated_at"])
 
         for post in posts:
             post.tags.set(random.sample(
@@ -190,9 +214,9 @@ class Command(BaseCommand):
                 random.randint(0, min(MAX_POST_TAGS, len(tags))),
             ))
 
-        published = list(
-            Post.objects.filter(status=Post.Status.PUBLISHED)
-        )
+        published = [
+            post for post in posts if post.status == Post.Status.PUBLISHED
+        ]
 
         if counts["Comments"] and not published:
             raise CommandError(
@@ -216,6 +240,15 @@ class Command(BaseCommand):
 
         Comment.objects.bulk_create(comments)
 
+        for comment in comments:
+            span_seconds = max(
+                0,
+                int((now - comment.post.created_at).total_seconds()),
+            )
+            comment.created_at = comment.post.created_at + timedelta(
+            seconds = random.randint(0, span_seconds)
+            )
+        Comment.objects.bulk_update(comments, ["created_at"])
         created = {
             "Users": len(users),
             "Categories": len(new_categories),
